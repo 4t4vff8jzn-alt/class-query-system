@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学生成绩查询</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>学生成绩查询</h1>
+    <p>请输入学号或姓名，查询该学生的全部科目成绩。</p>
+    <div class="form-group">
+      <label for="searchInput">学号或姓名</label>
+      <input id="searchInput" type="text" placeholder="例如：202321117001 或 陈高菲" />
+      <button id="searchBtn">查询</button>
+    </div>
+    <div id="result" class="result"></div>
+  </div>
+
+  <script src="student_data.js"></script>
+  <script>
+    const searchBtn = document.getElementById('searchBtn');
+    const searchInput = document.getElementById('searchInput');
+    const resultBox = document.getElementById('result');
+
+    function formatScore(score) {
+      return score === null || score === undefined || Number.isNaN(score)
+        ? '-'
+        : score;
+    }
+
+    function renderStudent(student) {
+      const courseRows = student.courses.map(course => `
+        <tr>
+          <td>${course.name}</td>
+          <td>${course.credit !== null ? course.credit : '-'}</td>
+          <td>${formatScore(course.score)}</td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="student-card">
+          <div class="student-info">
+            <div><strong>学号：</strong>${student.studentId}</div>
+            <div><strong>姓名：</strong>${student.name}</div>
+            <div><strong>班级：</strong>${student.class}</div>
+            <div><strong>加权平均绩点：</strong>${formatScore(student.weightedGpa)}</div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>课程</th><th>学分</th><th>成绩</th></tr>
+            </thead>
+            <tbody>${courseRows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderResult(students) {
+      if (!students.length) {
+        resultBox.innerHTML = '<div class="empty">未找到该学号或姓名，请检查输入后重试。</div>';
+        return;
+      }
+      resultBox.innerHTML = students.map(renderStudent).join('');
+    }
+
+    function searchStudents(query) {
+      const text = query.trim().toLowerCase();
+      if (!text) return [];
+
+      return STUDENTS.filter(student => {
+        const idMatch = student.studentId.toLowerCase().includes(text);
+        const nameMatch = student.name.toLowerCase().includes(text);
+        return idMatch || nameMatch;
+      });
+    }
+
+    function doSearch() {
+      const query = searchInput.value;
+      const students = searchStudents(query);
+      renderResult(students);
+    }
+
+    searchBtn.addEventListener('click', doSearch);
+    searchInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        doSearch();
+      }
+    });
+  </script>
+</body>
+</html>
